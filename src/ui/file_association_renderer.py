@@ -22,9 +22,13 @@ class FileAssociationRenderer(BaseUIRenderer):
         selected_extensions = {}
 
         col1, col2 = st.columns(2)
+        
+        # Distribute extensions evenly between columns
+        extensions_list = list(dangerous_extensions.keys())
+        mid_point = len(extensions_list) // 2
 
         with col1:
-            for ext in list(dangerous_extensions.keys())[:4]:
+            for ext in extensions_list[:mid_point]:
                 if st.checkbox(f"{ext} - {dangerous_extensions[ext]}", key=ext):
                     app = st.selectbox(
                         f"Set {ext} to open with:",
@@ -40,7 +44,7 @@ class FileAssociationRenderer(BaseUIRenderer):
                     selected_extensions[ext] = app
 
         with col2:
-            for ext in list(dangerous_extensions.keys())[4:]:
+            for ext in extensions_list[mid_point:]:
                 if st.checkbox(f"{ext} - {dangerous_extensions[ext]}", key=ext):
                     app = st.selectbox(
                         f"Set {ext} to open with:",
