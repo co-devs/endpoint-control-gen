@@ -4,22 +4,38 @@ from core.interfaces import SecurityControlMetadata, RiskLevel
 
 
 class FileAssociationControl(BaseSecurityControl):
+    DANGEROUS_EXTENSIONS = {
+        ".scr": {"description": "Screen saver files (often malicious)", "default_app": "notepad.exe"},
+        # ".pif": {"description": "Program Information Files", "default_app": "notepad.exe"},
+        # ".com": {"description": "DOS executable files", "default_app": "notepad.exe"},
+        ".cab": {"description": "Cabinet files", "default_app": "notepad.exe"},
+        ".appx": {"description": "AppX package files", "default_app": "notepad.exe"},
+        ".ps1": {"description": "PowerShell script files", "default_app": "notepad.exe"},
+        ".bat": {"description": "Batch files", "default_app": "notepad.exe"},
+        ".cmd": {"description": "Command files", "default_app": "notepad.exe"},
+        ".vbs": {"description": "VBScript files", "default_app": "notepad.exe"},
+        ".vbe": {"description": "VBScript Encoded Script files", "default_app": "notepad.exe"},
+        ".hta": {"description": "HTML Application files", "default_app": "notepad.exe"},
+        ".shs": {"description": "Shell Scrap Object files", "default_app": "notepad.exe"},
+        ".shb": {"description": "Shell Scrap files", "default_app": "notepad.exe"},
+        ".js": {"description": "JavaScript files", "default_app": "notepad.exe"},
+        ".jse": {"description": "JScript Encoded Script files", "default_app": "notepad.exe"},
+        ".jar": {"description": "Java Archive files", "default_app": "notepad.exe"},
+        ".wsh": {"description": "Windows Script Host files", "default_app": "notepad.exe"},
+        ".wsc": {"description": "Windows Script Component files", "default_app": "notepad.exe"},
+        ".wsf": {"description": "Windows Script Files", "default_app": "notepad.exe"},
+        ".sct": {"description": "Windows Scriptlet files", "default_app": "notepad.exe"},
+        ".chm": {"description": "Compiled HTML Help files", "default_app": "notepad.exe"},
+        ".iso": {"description": "ISO image files", "default_app": "notepad.exe"},
+    }
+
     def __init__(self):
         metadata = SecurityControlMetadata(
             name="File Association Security",
             description="Prevent execution of malicious files by changing default applications for commonly abused extensions",
             risk_level=RiskLevel.MEDIUM,
             purpose="Prevent execution of malicious files by changing default applications for commonly abused extensions",
-            common_targets=[
-                ".scr",
-                ".pif",
-                ".com",
-                ".bat",
-                ".cmd",
-                ".vbs",
-                ".js",
-                ".jar",
-            ],
+            common_targets=list(self.DANGEROUS_EXTENSIONS.keys()),
             category="File System Security",
         )
         super().__init__(metadata)
@@ -43,23 +59,16 @@ class FileAssociationControl(BaseSecurityControl):
     def get_default_configuration(self) -> Dict[str, Any]:
         return {
             "file_associations": {
-                ".scr": "notepad.exe",
-                ".pif": "notepad.exe",
-                ".com": "notepad.exe",
+                ext: config["default_app"] 
+                for ext, config in self.DANGEROUS_EXTENSIONS.items()
             }
         }
 
     def get_configuration_schema(self) -> Dict[str, Any]:
         return {
             "dangerous_extensions": {
-                ".scr": "Screen saver files (often malicious)",
-                ".pif": "Program Information Files",
-                ".com": "DOS executable files",
-                ".bat": "Batch files",
-                ".cmd": "Command files",
-                ".vbs": "VBScript files",
-                ".js": "JavaScript files",
-                ".jar": "Java Archive files",
+                ext: config["description"] 
+                for ext, config in self.DANGEROUS_EXTENSIONS.items()
             },
             "safe_applications": ["notepad.exe", "wordpad.exe", "Block execution"],
         }
