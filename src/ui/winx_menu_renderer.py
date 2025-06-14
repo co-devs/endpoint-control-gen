@@ -22,13 +22,17 @@ class WinXMenuRenderer(BaseUIRenderer):
 
         col1, col2 = st.columns(2)
 
+        # Distribute extensions evenly between columns
+        winx_list = list(winx_items.keys())
+        mid_point = len(winx_list) // 2
+
         with col1:
-            for item in list(winx_items.keys())[:5]:
+            for item in winx_list[:mid_point]:
                 if st.checkbox(f"Remove {item}", key=f"winx_{item}"):
                     selected_items.append(winx_items[item])
 
         with col2:
-            for item in list(winx_items.keys())[5:]:
+            for item in winx_list[mid_point:]:
                 if st.checkbox(f"Remove {item}", key=f"winx_{item}"):
                     selected_items.append(winx_items[item])
 

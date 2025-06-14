@@ -33,7 +33,7 @@ class FileAssociationControl(BaseSecurityControl):
         metadata = SecurityControlMetadata(
             name="File Association Security",
             description="Prevent execution of malicious files by changing default applications for commonly abused extensions",
-            risk_level=RiskLevel.MEDIUM,
+            risk_level=RiskLevel.LOW,
             purpose="Prevent execution of malicious files by changing default applications for commonly abused extensions",
             common_targets=list(self.DANGEROUS_EXTENSIONS.keys()),
             category="File System Security",
