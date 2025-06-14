@@ -19,7 +19,7 @@ class FileAssociationRenderer(BaseUIRenderer):
         safe_applications = schema["safe_applications"]
 
         st.markdown("**Select extensions to secure:**")
-        selected_extensions = {}
+        selected_extensions_list = []
 
         col1, col2 = st.columns(2)
         
@@ -30,33 +30,31 @@ class FileAssociationRenderer(BaseUIRenderer):
         with col1:
             for ext in extensions_list[:mid_point]:
                 if st.checkbox(f"{ext} - {dangerous_extensions[ext]}", key=ext):
-                    app = st.selectbox(
-                        f"Set {ext} to open with:",
-                        safe_applications + ["Custom application"],
-                        key=f"app_{ext}",
-                    )
-                    if app == "Custom application":
-                        app = st.text_input(
-                            f"Custom application for {ext}:", key=f"custom_{ext}"
-                        )
-                    elif app == "Block execution":
-                        app = "notepad.exe"
-                    selected_extensions[ext] = app
+                    selected_extensions_list.append(ext)
 
         with col2:
             for ext in extensions_list[mid_point:]:
                 if st.checkbox(f"{ext} - {dangerous_extensions[ext]}", key=ext):
-                    app = st.selectbox(
-                        f"Set {ext} to open with:",
-                        safe_applications + ["Custom application"],
-                        key=f"app_{ext}",
-                    )
-                    if app == "Custom application":
-                        app = st.text_input(
-                            f"Custom application for {ext}:", key=f"custom_{ext}"
-                        )
-                    elif app == "Block execution":
-                        app = "notepad.exe"
+                    selected_extensions_list.append(ext)
+
+        selected_extensions = {}
+        
+        # Show application selection only if extensions are selected
+        if selected_extensions_list:
+            st.markdown(f"**Selected {len(selected_extensions_list)} extension(s). Choose application for all:**")
+            app = st.selectbox(
+                "Set all selected extensions to open with:",
+                safe_applications + ["Custom application"],
+                key="global_app",
+            )
+            if app == "Custom application":
+                app = st.text_input("Custom application path:", key="global_custom")
+            elif app == "Block execution":
+                app = "notepad.exe"
+            
+            # Apply the selected app to all selected extensions
+            if app:
+                for ext in selected_extensions_list:
                     selected_extensions[ext] = app
 
         st.markdown("**Add custom extensions:**")

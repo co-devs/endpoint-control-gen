@@ -45,7 +45,6 @@ class UIService:
         st.sidebar.markdown("Generate Windows security artifacts")
 
         available_controls = list(self.control_registry.get_available_controls().keys())
-        available_controls.append("Custom Control")
 
         control_type = st.sidebar.selectbox("Select Control Type", available_controls)
 
