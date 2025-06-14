@@ -8,14 +8,20 @@ Security control implementations that define policies, validation logic, and con
 
 **Purpose**: Prevent execution of malicious files by changing default applications for commonly abused extensions.
 
-- **Risk Level**: Medium
+- **Risk Level**: Low
 - **Category**: File System Security
-- **Common Targets**: `.scr`, `.pif`, `.com`, `.bat`, `.cmd`, `.vbs`, `.js`, `.jar`
+- **Common Targets**: 30+ dangerous extensions including `.scr`, `.bat`, `.cmd`, `.vbs`, `.js`, `.jar`, `.appx`, `.ps1`
+
+**Centralized Configuration**:
+
+- **`DANGEROUS_EXTENSIONS`** dictionary at the top of the file contains all configurable extensions
+- Each extension entry includes description and default safe application
+- **To add new extensions**: Simply add entries to the `DANGEROUS_EXTENSIONS` dictionary
 
 **Configuration Schema**:
 
 - `file_associations` - Dictionary mapping file extensions to safe applications
-- Supports custom extensions and applications
+- Automatically generated from `DANGEROUS_EXTENSIONS` dictionary
 - Built-in safe applications: `notepad.exe`, `wordpad.exe`, "Block execution"
 
 **Example Settings**:
@@ -30,26 +36,75 @@ Security control implementations that define policies, validation logic, and con
 }
 ```
 
+**Adding New Extensions**:
+
+```python
+# In file_association_control.py
+DANGEROUS_EXTENSIONS = {
+    ".new_ext": {"description": "Description of new extension", "default_app": "notepad.exe"},
+    # ... existing extensions
+}
+```
+
 ### Network Traffic Control (`network_traffic_control.py`)
 
-**Purpose**: Block or monitor specific network traffic patterns.
+**Purpose**: Block network traffic from commonly abused Windows binaries to prevent data exfiltration and C2 communication.
 
 - **Risk Level**: High
 - **Category**: Network Security
-- **Features**: Firewall rule generation, traffic monitoring
+- **Common Targets**: 8+ risky binaries including `powershell.exe`, `cmd.exe`, `wscript.exe`, `regsvr32.exe`
+
+**Centralized Configuration**:
+
+- **`RISKY_BINARIES`** dictionary at the top of the file contains all configurable binaries
+- Each binary entry includes description and full system path
+- **To add new binaries**: Simply add entries to the `RISKY_BINARIES` dictionary
 
 **Configuration Schema**:
 
-- `firewall_rules` - List of firewall rules with action, program, and name
-- Support for both inbound and outbound rules
+- `firewall_rules` - List of firewall rules automatically generated from `RISKY_BINARIES`
+- Each rule blocks outbound traffic from specified programs
+- Automatic rule naming: `Block_{binary}_Outbound`
+
+**Adding New Binaries**:
+
+```python
+# In network_traffic_control.py
+RISKY_BINARIES = {
+    "new_binary.exe": {"description": "Description of binary", "path": "C:\\Path\\To\\new_binary.exe"},
+    # ... existing binaries
+}
+```
 
 ### WinX Menu Control (`winx_menu_control.py`)
 
-**Purpose**: Customize Windows X menu (Win+X) for security hardening.
+**Purpose**: Remove potentially dangerous entries from the Windows+X menu to limit user access to administrative tools.
 
 - **Risk Level**: Low
 - **Category**: User Interface Security
-- **Features**: Menu item management, access control
+- **Common Targets**: 10+ menu items including Command Prompt, PowerShell, Computer Management, Event Viewer
+
+**Centralized Configuration**:
+
+- **`WINX_ITEMS`** dictionary at the top of the file contains all configurable menu items
+- Each item entry includes description and actual menu name
+- **To add new items**: Simply add entries to the `WINX_ITEMS` dictionary
+
+**Configuration Schema**:
+
+- `winx_removal` - List of menu items to remove from Windows+X menu
+- Default removes administrative Command Prompt and PowerShell entries
+- Schema automatically generated from `WINX_ITEMS` dictionary
+
+**Adding New Menu Items**:
+
+```python
+# In winx_menu_control.py
+WINX_ITEMS = {
+    "New Item": {"description": "Description of menu item", "menu_name": "Actual Menu Name"},
+    # ... existing items
+}
+```
 
 ### Custom Control (`custom_control.py`)
 

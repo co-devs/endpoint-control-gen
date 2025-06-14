@@ -4,20 +4,24 @@ from core.interfaces import SecurityControlMetadata, RiskLevel
 
 
 class NetworkTrafficControl(BaseSecurityControl):
+    RISKY_BINARIES = {
+        "powershell.exe": {"description": "PowerShell executable", "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"},
+        "cmd.exe": {"description": "Command Prompt executable", "path": "C:\\Windows\\System32\\cmd.exe"},
+        "wscript.exe": {"description": "Windows Script Host", "path": "C:\\Windows\\System32\\wscript.exe"},
+        "cscript.exe": {"description": "Console Script Host", "path": "C:\\Windows\\System32\\cscript.exe"},
+        "regsvr32.exe": {"description": "Microsoft Register Server", "path": "C:\\Windows\\System32\\regsvr32.exe"},
+        "rundll32.exe": {"description": "Windows Run DLL", "path": "C:\\Windows\\System32\\rundll32.exe"},
+        "mshta.exe": {"description": "Microsoft HTML Application Host", "path": "C:\\Windows\\System32\\mshta.exe"},
+        "bitsadmin.exe": {"description": "Background Intelligent Transfer Service", "path": "C:\\Windows\\System32\\bitsadmin.exe"},
+    }
+
     def __init__(self):
         metadata = SecurityControlMetadata(
             name="Network Traffic Control",
             description="Block network traffic from commonly abused Windows binaries",
             risk_level=RiskLevel.HIGH,
             purpose="Block network traffic from commonly abused Windows binaries to prevent data exfiltration and C2 communication",
-            common_targets=[
-                "powershell.exe",
-                "cmd.exe",
-                "wscript.exe",
-                "cscript.exe",
-                "regsvr32.exe",
-                "rundll32.exe",
-            ],
+            common_targets=list(self.RISKY_BINARIES.keys()),
             category="Network Security",
         )
         super().__init__(metadata)
@@ -46,26 +50,17 @@ class NetworkTrafficControl(BaseSecurityControl):
         return {
             "firewall_rules": [
                 {
-                    "name": "Block_powershell_Outbound",
-                    "program": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-                },
-                {
-                    "name": "Block_cmd_Outbound",
-                    "program": "C:\\Windows\\System32\\cmd.exe",
-                },
+                    "name": f"Block_{binary_name.replace('.exe', '')}_Outbound",
+                    "program": config["path"],
+                }
+                for binary_name, config in self.RISKY_BINARIES.items()
             ]
         }
 
     def get_configuration_schema(self) -> Dict[str, Any]:
         return {
             "risky_binaries": {
-                "powershell.exe": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-                "cmd.exe": "C:\\Windows\\System32\\cmd.exe",
-                "wscript.exe": "C:\\Windows\\System32\\wscript.exe",
-                "cscript.exe": "C:\\Windows\\System32\\cscript.exe",
-                "regsvr32.exe": "C:\\Windows\\System32\\regsvr32.exe",
-                "rundll32.exe": "C:\\Windows\\System32\\rundll32.exe",
-                "mshta.exe": "C:\\Windows\\System32\\mshta.exe",
-                "bitsadmin.exe": "C:\\Windows\\System32\\bitsadmin.exe",
+                binary_name: f"{config['description']} ({config['path']})"
+                for binary_name, config in self.RISKY_BINARIES.items()
             }
         }
