@@ -5,6 +5,7 @@ from core.interfaces import SecurityControlMetadata, RiskLevel
 
 class NetworkTrafficControl(BaseSecurityControl):
     RISKY_BINARIES = {
+        # TODO: most of these have x64 and x86 paths, need to handle both
         "powershell.exe": {"description": "PowerShell executable", "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"},
         "cmd.exe": {"description": "Command Prompt executable", "path": "C:\\Windows\\System32\\cmd.exe"},
         "wscript.exe": {"description": "Windows Script Host", "path": "C:\\Windows\\System32\\wscript.exe"},

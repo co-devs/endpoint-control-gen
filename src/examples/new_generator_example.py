@@ -2,7 +2,8 @@
 Example: Adding a new artifact generator to the modular application
 
 This example shows how to create a new "Ansible Playbook" generator
-that creates Ansible playbooks for Linux/Unix systems.
+that creates Ansible playbooks for Linux/Unix systems, and a "Terraform" generator
+for generating Terraform configurations.
 """
 
 from datetime import datetime
@@ -11,7 +12,21 @@ from ..generators.base_generator import BaseArtifactGenerator
 
 
 class AnsiblePlaybookGenerator(BaseArtifactGenerator):
+    """
+    Artifact generator for creating Ansible playbooks based on security control settings.
+    """
+
     def generate(self, control_name: str, settings: Dict[str, Any]) -> str:
+        """
+        Generate an Ansible playbook as a string.
+
+        Args:
+            control_name (str): The name of the security control.
+            settings (Dict[str, Any]): The settings for the control.
+
+        Returns:
+            str: The generated Ansible playbook content.
+        """
         playbook_lines = [
             "---",
             f"# Ansible Playbook for {control_name}",
@@ -23,16 +38,19 @@ class AnsiblePlaybookGenerator(BaseArtifactGenerator):
             "  tasks:",
         ]
 
+        # Add file association tasks if present
         if "file_associations" in settings:
             playbook_lines.extend(
                 self._generate_file_tasks(settings["file_associations"])
             )
 
+        # Add firewall rule tasks if present
         if "firewall_rules" in settings:
             playbook_lines.extend(
                 self._generate_firewall_tasks(settings["firewall_rules"])
             )
 
+        # Add registry modification tasks if present
         if "registry_modifications" in settings:
             playbook_lines.extend(
                 self._generate_registry_tasks(settings["registry_modifications"])
@@ -41,6 +59,15 @@ class AnsiblePlaybookGenerator(BaseArtifactGenerator):
         return "\n".join(playbook_lines)
 
     def _generate_file_tasks(self, file_associations: Dict[str, str]) -> list:
+        """
+        Generate Ansible tasks for file associations.
+
+        Args:
+            file_associations (Dict[str, str]): Mapping of file extensions to applications.
+
+        Returns:
+            list: List of Ansible task lines.
+        """
         tasks = [
             "",
             "    # File association security (Linux equivalent - MIME types)",
@@ -60,6 +87,15 @@ class AnsiblePlaybookGenerator(BaseArtifactGenerator):
         return tasks
 
     def _generate_firewall_tasks(self, firewall_rules: list) -> list:
+        """
+        Generate Ansible tasks for firewall rules.
+
+        Args:
+            firewall_rules (list): List of firewall rule dictionaries.
+
+        Returns:
+            list: List of Ansible task lines.
+        """
         tasks = [
             "",
             "    # Firewall rules using UFW",
@@ -87,6 +123,15 @@ class AnsiblePlaybookGenerator(BaseArtifactGenerator):
         return tasks
 
     def _generate_registry_tasks(self, registry_modifications: list) -> list:
+        """
+        Generate Ansible tasks for registry modifications (Linux equivalent).
+
+        Args:
+            registry_modifications (list): List of registry modification dictionaries.
+
+        Returns:
+            list: List of Ansible task lines.
+        """
         tasks = [
             "",
             "    # Registry modifications (Linux equivalent - system configurations)",
@@ -107,12 +152,33 @@ class AnsiblePlaybookGenerator(BaseArtifactGenerator):
         return tasks
 
     def get_file_extension(self) -> str:
+        """
+        Get the file extension for Ansible playbooks.
+
+        Returns:
+            str: The file extension ("yml").
+        """
         return "yml"
 
     def get_mime_type(self) -> str:
+        """
+        Get the MIME type for Ansible playbooks.
+
+        Returns:
+            str: The MIME type ("text/yaml").
+        """
         return "text/yaml"
 
     def supports_settings(self, settings: Dict[str, Any]) -> bool:
+        """
+        Determine if this generator supports the provided settings.
+
+        Args:
+            settings (Dict[str, Any]): The settings to check.
+
+        Returns:
+            bool: True if supported, False otherwise.
+        """
         supported_keys = {
             "file_associations",
             "firewall_rules",
@@ -122,7 +188,21 @@ class AnsiblePlaybookGenerator(BaseArtifactGenerator):
 
 
 class TerraformGenerator(BaseArtifactGenerator):
+    """
+    Artifact generator for creating Terraform configurations based on security control settings.
+    """
+
     def generate(self, control_name: str, settings: Dict[str, Any]) -> str:
+        """
+        Generate a Terraform configuration as a string.
+
+        Args:
+            control_name (str): The name of the security control.
+            settings (Dict[str, Any]): The settings for the control.
+
+        Returns:
+            str: The generated Terraform configuration content.
+        """
         tf_lines = [
             f"# Terraform configuration for {control_name}",
             f"# Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -138,12 +218,22 @@ class TerraformGenerator(BaseArtifactGenerator):
             "",
         ]
 
+        # Add security group rules if firewall_rules are present
         if "firewall_rules" in settings:
             tf_lines.extend(self._generate_security_group(settings["firewall_rules"]))
 
         return "\n".join(tf_lines)
 
     def _generate_security_group(self, firewall_rules: list) -> list:
+        """
+        Generate Terraform security group egress rules for firewall settings.
+
+        Args:
+            firewall_rules (list): List of firewall rule dictionaries.
+
+        Returns:
+            list: List of Terraform configuration lines.
+        """
         lines = [
             'resource "aws_security_group" "security_control" {',
             '  name_prefix = "security-control-"',
@@ -169,12 +259,33 @@ class TerraformGenerator(BaseArtifactGenerator):
         return lines
 
     def get_file_extension(self) -> str:
+        """
+        Get the file extension for Terraform configurations.
+
+        Returns:
+            str: The file extension ("tf").
+        """
         return "tf"
 
     def get_mime_type(self) -> str:
+        """
+        Get the MIME type for Terraform configurations.
+
+        Returns:
+            str: The MIME type ("text/plain").
+        """
         return "text/plain"
 
     def supports_settings(self, settings: Dict[str, Any]) -> bool:
+        """
+        Determine if this generator supports the provided settings.
+
+        Args:
+            settings (Dict[str, Any]): The settings to check.
+
+        Returns:
+            bool: True if "firewall_rules" is present, False otherwise.
+        """
         return "firewall_rules" in settings
 
 

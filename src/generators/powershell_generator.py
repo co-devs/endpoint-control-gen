@@ -1,10 +1,33 @@
+"""
+powershell_generator.py
+
+This module provides a generator for creating PowerShell scripts that implement
+security controls such as file associations, firewall rules, and WinX menu modifications.
+"""
+
 from datetime import datetime
 from typing import Dict, Any
 from generators.base_generator import BaseArtifactGenerator
 
 
 class PowerShellGenerator(BaseArtifactGenerator):
+    """
+    Generates PowerShell scripts to apply security controls based on provided settings.
+    Supports file associations, firewall rules, and WinX menu modifications.
+    """
+
     def generate(self, control_name: str, settings: Dict[str, Any]) -> str:
+        """
+        Generate a PowerShell script string based on the control name and settings.
+
+        Args:
+            control_name (str): The name of the security control.
+            settings (Dict[str, Any]): Dictionary containing settings such as
+                'file_associations', 'firewall_rules', and/or 'winx_removal'.
+
+        Returns:
+            str: The generated PowerShell script as a string.
+        """
         script_lines = [
             "# Windows Security Control Implementation Script",
             f"# Control: {control_name}",
@@ -20,16 +43,19 @@ class PowerShellGenerator(BaseArtifactGenerator):
             "",
         ]
 
+        # Add file association commands if present in settings
         if "file_associations" in settings:
             script_lines.extend(
                 self._generate_file_association_script(settings["file_associations"])
             )
 
+        # Add firewall rule commands if present in settings
         if "firewall_rules" in settings:
             script_lines.extend(
                 self._generate_firewall_script(settings["firewall_rules"])
             )
 
+        # Add WinX menu modification commands if present in settings
         if "winx_removal" in settings:
             script_lines.extend(self._generate_winx_script(settings["winx_removal"]))
 
@@ -45,6 +71,15 @@ class PowerShellGenerator(BaseArtifactGenerator):
     def _generate_file_association_script(
         self, file_associations: Dict[str, str]
     ) -> list:
+        """
+        Generate PowerShell commands for modifying file associations.
+
+        Args:
+            file_associations (Dict[str, str]): Mapping of file extensions to associated applications.
+
+        Returns:
+            list: List of PowerShell command strings.
+        """
         lines = [
             "# File Association Security Control",
             "Write-Host 'Modifying file associations...' -ForegroundColor Yellow",
@@ -64,6 +99,16 @@ class PowerShellGenerator(BaseArtifactGenerator):
         return lines
 
     def _generate_firewall_script(self, firewall_rules: list) -> list:
+        """
+        Generate PowerShell commands for adding firewall rules.
+
+        Args:
+            firewall_rules (list): List of firewall rule dictionaries, each containing
+                'program' and 'name' keys.
+
+        Returns:
+            list: List of PowerShell command strings.
+        """
         lines = [
             "# Windows Firewall Rules",
             "Write-Host 'Adding firewall rules...' -ForegroundColor Yellow",
@@ -79,6 +124,15 @@ class PowerShellGenerator(BaseArtifactGenerator):
         return lines
 
     def _generate_winx_script(self, winx_removal: list) -> list:
+        """
+        Generate PowerShell commands for modifying the WinX menu.
+
+        Args:
+            winx_removal (list): List of WinX menu item names to remove.
+
+        Returns:
+            list: List of PowerShell command strings.
+        """
         lines = [
             "# WinX Menu Modification",
             "Write-Host 'Modifying WinX menu...' -ForegroundColor Yellow",
@@ -104,7 +158,19 @@ class PowerShellGenerator(BaseArtifactGenerator):
         return lines
 
     def get_file_extension(self) -> str:
+        """
+        Returns the file extension for the generated PowerShell script.
+
+        Returns:
+            str: The file extension ('ps1').
+        """
         return "ps1"
 
     def get_mime_type(self) -> str:
+        """
+        Returns the MIME type for the generated PowerShell script.
+
+        Returns:
+            str: The MIME type ('text/plain').
+        """
         return "text/plain"
