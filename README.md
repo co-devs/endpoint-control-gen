@@ -17,10 +17,11 @@ The application has been refactored into a modular architecture with clear separ
 
 Each security control is now a separate module:
 
-- `file_association_control.py` - File association security
-- `network_traffic_control.py` - Network traffic blocking
-- `winx_menu_control.py` - WinX menu hardening
-- `custom_control.py` - User-defined controls
+- `file_association_control.py` - Default App Associations (file association security)
+- `network_traffic_control.py` - LOLBIN Firewall Rules (blocking network traffic from abused binaries)
+- `winx_menu_control.py` - WinX Menu Hardening (removing dangerous menu items)
+- `windows_hotkey_control.py` - Windows Hotkey Control (disabling Windows keyboard shortcuts)
+- `custom_control.py` - User-defined controls (example only, not in navigation)
 
 ### Generators (`generators/`)
 
@@ -35,10 +36,11 @@ Artifact generators for different output formats:
 
 Separate UI components for each control type:
 
-- `file_association_renderer.py`
-- `network_traffic_renderer.py`
-- `winx_menu_renderer.py`
-- `custom_renderer.py`
+- `file_association_renderer.py` - File extension selection with Select All/None buttons
+- `network_traffic_renderer.py` - LOLBIN selection with Select All/None buttons
+- `winx_menu_renderer.py` - WinX menu item selection with Select All/None buttons
+- `windows_hotkey_renderer.py` - Hotkey selection with Select All/None buttons
+- `custom_renderer.py` - Custom control renderer (example only)
 
 ### Services (`services/`)
 
@@ -150,7 +152,7 @@ See the `examples/` directory for:
 ## Running the Application
 
 ```bash
-python src/main.py
+streamlit run src/main.py
 ```
 
-The application will use the new modular architecture while maintaining the same user interface and functionality.
+The application uses Streamlit's native navigation with separate pages for each control. Navigate between controls using the sidebar navigation menu.

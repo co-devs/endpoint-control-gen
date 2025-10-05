@@ -15,15 +15,16 @@ Abstract base class defining the contract for all UI renderers:
 
 #### File Association Renderer (`file_association_renderer.py`)
 
-**Purpose**: Render configuration UI for file association security control.
+**Purpose**: Render configuration UI for Default App Associations control.
 
 **Features**:
 
-- **Extension Selection**: Checkbox interface for dangerous extensions
+- **Extension Selection**: Checkbox interface for 19 dangerous extensions
+- **Select All/None Buttons**: Quick selection controls using session state
 - **Application Mapping**: Dropdown selection for safe applications
 - **Custom Extensions**: Text input for additional extensions
 - **Custom Applications**: Support for user-defined applications
-- **Two-Column Layout**: Organized display of extension options
+- **Dynamic Column Layout**: 1-3 columns based on item count (currently 3 for 19 items)
 
 **UI Components**:
 
@@ -46,24 +47,41 @@ Abstract base class defining the contract for all UI renderers:
 
 #### Network Traffic Renderer (`network_traffic_renderer.py`)
 
-**Purpose**: Render configuration UI for network traffic control.
+**Purpose**: Render configuration UI for LOLBIN Firewall Rules control.
 
 **Features**:
 
-- Firewall rule configuration
-- Protocol and port selection
-- Action specification (Allow/Block)
-- Rule naming and description
+- **Binary Selection**: Checkbox interface for 15 LOLBINs with tooltips
+- **Select All/None Buttons**: Quick selection controls using session state
+- **Architecture Support**: Automatically includes x86 and x64 paths
+- **Custom Binary**: Text input for additional binaries
+- **Dynamic Column Layout**: 1-3 columns based on item count (currently 3 for 15 items)
+- **Help Tooltips**: Each binary shows description and path count on hover
 
 #### WinX Menu Renderer (`winx_menu_renderer.py`)
 
-**Purpose**: Render configuration UI for Windows X menu customization.
+**Purpose**: Render configuration UI for WinX Menu Hardening control.
 
 **Features**:
 
-- Menu item management
-- Access control settings
-- Custom menu entries
+- **Menu Item Selection**: Checkbox interface for 10 WinX menu items
+- **Select All/None Buttons**: Quick selection controls using session state
+- **Dynamic Column Layout**: 1-3 columns based on item count (currently 2 for 10 items)
+- **System-wide Scope**: Changes apply to all users and default profile
+
+#### Windows Hotkey Renderer (`windows_hotkey_renderer.py`)
+
+**Purpose**: Render configuration UI for Windows Hotkey Control.
+
+**Features**:
+
+- **Option 1 - Disable All**: Checkbox to enable NoWinKeys policy (system-wide)
+- **Option 2 - Disable Specific**: Checkbox interface for 12 individual hotkeys
+- **Select All/None Buttons**: Quick selection controls using session state (disabled when Option 1 is checked)
+- **Dynamic Column Layout**: 1-3 columns based on item count (currently 2 for 12 items)
+- **Help Tooltips**: Each hotkey shows description and risk level on hover
+- **Warning Message**: Displayed when "Disable All" is selected
+- **Mutual Exclusion**: Specific hotkey checkboxes disabled when "Disable All" is active
 
 #### Custom Renderer (`custom_renderer.py`)
 
@@ -107,7 +125,7 @@ Central service managing common UI elements and application-wide styling.
 #### Main Interface
 
 - **`render_main_header()`** - Application title and description
-- **`render_sidebar()`** - Control selection and information panel
+- **`render_sidebar_notices()`** - Security warnings and documentation links (used with st.navigation)
 - **`render_control_info()`** - Control metadata display with expandable details
 
 #### Artifact Display
@@ -149,15 +167,28 @@ def render_control_info(self, control: ISecurityControl):
 - **Documentation Links** - Implementation guidance
 - **Risk Assessment** - Color-coded risk levels
 
-## Rendering Process
+## Navigation and Rendering Process
 
-1. **Control Selection**: User selects control type from sidebar
-2. **Renderer Lookup**: System finds appropriate UI renderer
-3. **Configuration Form**: Renderer generates control-specific form
-4. **Settings Collection**: Form inputs compiled into settings dictionary
-5. **Validation**: Control validates settings
-6. **Artifact Generation**: Compatible generators create artifacts
-7. **Display**: Artifacts shown in tabbed interface with download options
+### Streamlit Navigation
+
+The application uses Streamlit's native `st.navigation()` for a clean, page-based interface:
+
+- Each security control is rendered as a separate page
+- Navigation menu automatically generated from registered controls
+- URL routing for direct access to specific controls (e.g., `/default_app_associations`)
+- Security notices persist in sidebar across all pages
+
+### Rendering Flow
+
+1. **Page Selection**: User navigates to control page via sidebar navigation
+2. **Page Rendering**: Page function executes for selected control
+3. **Renderer Lookup**: System finds appropriate UI renderer for the control
+4. **Configuration Form**: Renderer generates control-specific form with session state
+5. **User Interaction**: Select All/None buttons and checkboxes update session state
+6. **Settings Collection**: Form inputs compiled into settings dictionary
+7. **Validation**: Control validates settings
+8. **Artifact Generation**: Compatible generators create artifacts
+9. **Display**: Artifacts shown in tabbed interface with download options
 
 ## Adding New Renderers
 

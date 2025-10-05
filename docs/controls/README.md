@@ -4,13 +4,14 @@ Security control implementations that define policies, validation logic, and con
 
 ## Available Controls
 
-### File Association Control (`file_association_control.py`)
+### Default App Associations (`file_association_control.py`)
 
 **Purpose**: Prevent execution of malicious files by changing default applications for commonly abused extensions.
 
 - **Risk Level**: Low
 - **Category**: File System Security
-- **Common Targets**: 30+ dangerous extensions including `.scr`, `.bat`, `.cmd`, `.vbs`, `.js`, `.jar`, `.appx`, `.ps1`
+- **Common Targets**: 19 dangerous extensions including `.scr`, `.bat`, `.cmd`, `.vbs`, `.js`, `.jar`, `.appx`, `.ps1`, `.iso`, `.hta`
+- **Registry Path**: `HKLM\SOFTWARE\Classes\` (uses HKLM instead of HKCR to avoid dynamic generation issues)
 
 **Centralized Configuration**:
 
@@ -46,19 +47,20 @@ DANGEROUS_EXTENSIONS = {
 }
 ```
 
-### Network Traffic Control (`network_traffic_control.py`)
+### LOLBIN Firewall Rules (`network_traffic_control.py`)
 
-**Purpose**: Block network traffic from commonly abused Windows binaries to prevent data exfiltration and C2 communication.
+**Purpose**: Block network traffic from commonly abused Windows binaries (Living Off the Land Binaries) to prevent data exfiltration and C2 communication.
 
 - **Risk Level**: High
 - **Category**: Network Security
-- **Common Targets**: 8+ risky binaries including `powershell.exe`, `cmd.exe`, `wscript.exe`, `regsvr32.exe`
+- **Common Targets**: 15 LOLBINs including `powershell.exe`, `cmd.exe`, `wscript.exe`, `regsvr32.exe`, `certutil.exe`, `msbuild.exe`, `msiexec.exe`
+- **Architecture Support**: Covers both x86 and x64 paths for all binaries
 
 **Centralized Configuration**:
 
 - **`RISKY_BINARIES`** dictionary at the top of the file contains all configurable binaries
-- Each binary entry includes description and full system path
-- **To add new binaries**: Simply add entries to the `RISKY_BINARIES` dictionary
+- Each binary entry includes description and multiple paths (System32 and SysWOW64, or .NET Framework paths)
+- **To add new binaries**: Simply add entries to the `RISKY_BINARIES` dictionary with all relevant paths
 
 **Configuration Schema**:
 
@@ -71,18 +73,25 @@ DANGEROUS_EXTENSIONS = {
 ```python
 # In network_traffic_control.py
 RISKY_BINARIES = {
-    "new_binary.exe": {"description": "Description of binary", "path": "C:\\Path\\To\\new_binary.exe"},
+    "new_binary.exe": {
+        "description": "Description of binary",
+        "paths": [
+            "%SystemRoot%\\System32\\new_binary.exe",
+            "%SystemRoot%\\SysWOW64\\new_binary.exe"
+        ]
+    },
     # ... existing binaries
 }
 ```
 
-### WinX Menu Control (`winx_menu_control.py`)
+### WinX Menu Hardening (`winx_menu_control.py`)
 
-**Purpose**: Remove potentially dangerous entries from the Windows+X menu to limit user access to administrative tools.
+**Purpose**: Remove potentially dangerous entries from the Windows+X menu to limit user access to administrative tools. Applies to all existing users and the default profile for new users.
 
 - **Risk Level**: Low
 - **Category**: User Interface Security
-- **Common Targets**: 10+ menu items including Command Prompt, PowerShell, Computer Management, Event Viewer
+- **Common Targets**: 10 menu items including Command Prompt, PowerShell, Computer Management, Event Viewer
+- **Scope**: System-wide - applies to all users and default profile
 
 **Centralized Configuration**:
 
@@ -95,6 +104,7 @@ RISKY_BINARIES = {
 - `winx_removal` - List of menu items to remove from Windows+X menu
 - Default removes administrative Command Prompt and PowerShell entries
 - Schema automatically generated from `WINX_ITEMS` dictionary
+- PowerShell and Batch scripts iterate through all user profiles and default profile
 
 **Adding New Menu Items**:
 
@@ -103,6 +113,62 @@ RISKY_BINARIES = {
 WINX_ITEMS = {
     "New Item": {"description": "Description of menu item", "menu_name": "Actual Menu Name"},
     # ... existing items
+}
+```
+
+### Windows Hotkey Control (`windows_hotkey_control.py`)
+
+**Purpose**: Disable Windows hotkeys (keyboard shortcuts) to limit user access to system functions and prevent bypass of security controls.
+
+- **Risk Level**: Medium
+- **Category**: User Interface Security
+- **Common Targets**: 12 Windows hotkeys including Win+R (Run), Win+X (WinX menu), Win+I (Settings), Win+V (Clipboard)
+- **Scope**: System-wide via NoWinKeys policy, or per-user via DisabledHotkeys registry value
+
+**Centralized Configuration**:
+
+- **`COMMON_HOTKEYS`** dictionary at the top of the file contains all configurable hotkeys
+- Each hotkey entry includes description and risk assessment
+- **To add new hotkeys**: Simply add entries to the `COMMON_HOTKEYS` dictionary
+
+**Two Operating Modes**:
+
+1. **Disable ALL hotkeys** (Option 1):
+   - Registry: `HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer`
+   - Value: `NoWinKeys` (DWORD) = 1
+   - Scope: System-wide, affects all users
+   - **Warning**: Disables Win+L (lock screen) - use with caution
+
+2. **Disable specific hotkeys** (Option 2):
+   - Registry: `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+   - Value: `DisabledHotkeys` (String) = concatenated letters (e.g., "RX" for Win+R and Win+X)
+   - Scope: Per-user, applied to all users and default profile
+
+**Configuration Schema**:
+
+- `disable_all_hotkeys` - Boolean to enable NoWinKeys policy
+- `disabled_hotkeys` - List of hotkey letters to disable individually
+- Default configuration disables Win+R and Win+X (high risk)
+
+**Example Settings**:
+
+```python
+{
+    "disable_all_hotkeys": False,
+    "disabled_hotkeys": ["R", "X"]  # Disables Win+R and Win+X
+}
+```
+
+**Adding New Hotkeys**:
+
+```python
+# In windows_hotkey_control.py
+COMMON_HOTKEYS = {
+    "Z": {
+        "description": "Win+Z (Custom function)",
+        "risk": "Medium - Description of risk"
+    },
+    # ... existing hotkeys
 }
 ```
 

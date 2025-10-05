@@ -76,10 +76,10 @@ class UIService:
             "Always test configurations in a non-production environment first!"
         )
         st.sidebar.markdown("")
-        # st.sidebar.markdown("**📝 Documentation**")
-        # st.sidebar.markdown(
-        #     "Each download includes implementation instructions and security considerations."
-        # )
+        st.sidebar.markdown("**📝 Documentation**")
+        st.sidebar.markdown(
+            "Each download includes implementation instructions and security considerations."
+        )
 
     def render_control_info(self, control: ISecurityControl):
         """
