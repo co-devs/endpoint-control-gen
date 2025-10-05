@@ -59,6 +59,10 @@ class PowerShellGenerator(BaseArtifactGenerator):
         if "winx_removal" in settings:
             script_lines.extend(self._generate_winx_script(settings["winx_removal"]))
 
+        # Add Windows hotkey control commands if present in settings
+        if "disable_all_hotkeys" in settings or "disabled_hotkeys" in settings:
+            script_lines.extend(self._generate_hotkey_script(settings))
+
         script_lines.extend(
             [
                 "Write-Host 'Security control implementation completed!' -ForegroundColor Green",
@@ -194,6 +198,65 @@ class PowerShellGenerator(BaseArtifactGenerator):
                 "",
             ]
         )
+
+        return lines
+
+    def _generate_hotkey_script(self, settings: Dict[str, Any]) -> list:
+        """
+        Generate PowerShell commands for disabling Windows hotkeys.
+
+        Args:
+            settings (Dict[str, Any]): Settings containing 'disable_all_hotkeys' and/or 'disabled_hotkeys'.
+
+        Returns:
+            list: List of PowerShell command strings.
+        """
+        lines = [
+            "# Windows Hotkey Control",
+            "Write-Host 'Configuring Windows hotkey restrictions...' -ForegroundColor Yellow",
+            "",
+        ]
+
+        # Option 1: Disable all Windows hotkeys via NoWinKeys policy
+        if settings.get("disable_all_hotkeys", False):
+            lines.extend(
+                [
+                    "# Disable ALL Windows hotkeys (NoWinKeys policy)",
+                    "Write-Host '  Disabling all Windows hotkeys (system-wide)...' -ForegroundColor Cyan",
+                    "New-Item -Path 'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer' -Force | Out-Null",
+                    "Set-ItemProperty -Path 'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer' -Name 'NoWinKeys' -Value 1 -Type DWord",
+                    "",
+                ]
+            )
+
+        # Option 2: Disable specific hotkeys via DisabledHotkeys setting
+        if settings.get("disabled_hotkeys") and len(settings["disabled_hotkeys"]) > 0:
+            hotkeys_string = "".join(settings["disabled_hotkeys"])
+            lines.extend(
+                [
+                    "# Disable specific Windows hotkeys (per user)",
+                    f"Write-Host '  Disabling specific hotkeys: {hotkeys_string}' -ForegroundColor Cyan",
+                    "",
+                    "# Get all user profile paths",
+                    '$userProfiles = Get-ChildItem "C:\\Users" -Directory | Where-Object { $_.Name -notin @("Public", "Default", "All Users", "Default User") }',
+                    "",
+                    "# Apply to each existing user",
+                    "foreach ($userProfile in $userProfiles) {",
+                    "    $userSID = (New-Object System.Security.Principal.NTAccount($userProfile.Name)).Translate([System.Security.Principal.SecurityIdentifier]).Value",
+                    "    $regPath = \"Registry::HKEY_USERS\\$userSID\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\"",
+                    "    if (Test-Path $regPath) {",
+                    f"        Set-ItemProperty -Path $regPath -Name 'DisabledHotkeys' -Value '{hotkeys_string}' -Type String -ErrorAction SilentlyContinue",
+                    '        Write-Host "    Applied to: $($userProfile.Name)" -ForegroundColor Gray',
+                    "    }",
+                    "}",
+                    "",
+                    "# Apply to default user profile for new users",
+                    "reg load HKU\\DefaultUser C:\\Users\\Default\\NTUSER.DAT 2>$null",
+                    f"reg add \"HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisabledHotkeys /t REG_SZ /d \"{hotkeys_string}\" /f 2>$null",
+                    "reg unload HKU\\DefaultUser 2>$null",
+                    "",
+                ]
+            )
 
         return lines
 

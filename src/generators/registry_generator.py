@@ -51,6 +51,34 @@ class RegistryGenerator(BaseArtifactGenerator):
                     ]
                 )
 
+        # Add Windows hotkey control registry entries if present in settings
+        if "disable_all_hotkeys" in settings or "disabled_hotkeys" in settings:
+            reg_lines.append("; Windows Hotkey Control")
+
+            # Option 1: Disable all Windows hotkeys via NoWinKeys policy
+            if settings.get("disable_all_hotkeys", False):
+                reg_lines.extend(
+                    [
+                        "; Disable ALL Windows hotkeys (system-wide)",
+                        "[HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer]",
+                        '"NoWinKeys"=dword:00000001',
+                        "",
+                    ]
+                )
+
+            # Option 2: Disable specific hotkeys via DisabledHotkeys setting
+            if settings.get("disabled_hotkeys") and len(settings["disabled_hotkeys"]) > 0:
+                hotkeys_string = "".join(settings["disabled_hotkeys"])
+                reg_lines.extend(
+                    [
+                        f"; Disable specific Windows hotkeys: {hotkeys_string}",
+                        "; NOTE: This setting applies per-user (HKCU). Apply this to each user's registry hive.",
+                        "[HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced]",
+                        f'"DisabledHotkeys"="{hotkeys_string}"',
+                        "",
+                    ]
+                )
+
         return "\n".join(reg_lines)
 
     def get_file_extension(self) -> str:

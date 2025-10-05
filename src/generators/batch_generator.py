@@ -112,6 +112,54 @@ class BatchGenerator(BaseArtifactGenerator):
                 ]
             )
 
+        # Add Windows hotkey control commands if present in settings
+        if "disable_all_hotkeys" in settings or "disabled_hotkeys" in settings:
+            batch_lines.extend(
+                [
+                    "REM Windows Hotkey Control",
+                    "echo Configuring Windows hotkey restrictions...",
+                    "",
+                ]
+            )
+
+            # Option 1: Disable all Windows hotkeys via NoWinKeys policy
+            if settings.get("disable_all_hotkeys", False):
+                batch_lines.extend(
+                    [
+                        "REM Disable ALL Windows hotkeys (system-wide)",
+                        "echo   Disabling all Windows hotkeys (system-wide)...",
+                        'reg add "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer" /v NoWinKeys /t REG_DWORD /d 1 /f',
+                        "",
+                    ]
+                )
+
+            # Option 2: Disable specific hotkeys via DisabledHotkeys setting
+            if settings.get("disabled_hotkeys") and len(settings["disabled_hotkeys"]) > 0:
+                hotkeys_string = "".join(settings["disabled_hotkeys"])
+                batch_lines.extend(
+                    [
+                        f"REM Disable specific Windows hotkeys: {hotkeys_string}",
+                        f"echo   Disabling specific hotkeys: {hotkeys_string}",
+                        "",
+                        "REM Process each user profile",
+                        'for /D %%U in (C:\\Users\\*) do (',
+                        '    if exist "%%U\\NTUSER.DAT" (',
+                        '        echo     Processing: %%~nxU',
+                        '        REM Load user hive',
+                        '        reg load "HKU\\TempUser_%%~nxU" "%%U\\NTUSER.DAT" 2>nul',
+                        f'        reg add "HKU\\TempUser_%%~nxU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v DisabledHotkeys /t REG_SZ /d "{hotkeys_string}" /f 2>nul',
+                        '        reg unload "HKU\\TempUser_%%~nxU" 2>nul',
+                        "    )",
+                        ")",
+                        "",
+                        "REM Apply to default user profile for new users",
+                        'reg load "HKU\\DefaultUser" "C:\\Users\\Default\\NTUSER.DAT" 2>nul',
+                        f'reg add "HKU\\DefaultUser\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v DisabledHotkeys /t REG_SZ /d "{hotkeys_string}" /f 2>nul',
+                        'reg unload "HKU\\DefaultUser" 2>nul',
+                        "",
+                    ]
+                )
+
         batch_lines.extend(
             [
                 "echo Security control implementation completed!",

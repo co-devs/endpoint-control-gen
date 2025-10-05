@@ -12,6 +12,7 @@ from services.ui_service import UIService
 from controls.file_association_control import FileAssociationControl
 from controls.network_traffic_control import NetworkTrafficControl
 from controls.winx_menu_control import WinXMenuControl
+from controls.windows_hotkey_control import WindowsHotkeyControl
 from controls.custom_control import CustomSecurityControl
 
 from generators.gpo_generator import GPOXMLGenerator
@@ -22,6 +23,7 @@ from generators.batch_generator import BatchGenerator
 from ui.file_association_renderer import FileAssociationRenderer
 from ui.network_traffic_renderer import NetworkTrafficRenderer
 from ui.winx_menu_renderer import WinXMenuRenderer
+from ui.windows_hotkey_renderer import WindowsHotkeyRenderer
 from ui.custom_renderer import CustomRenderer
 
 
@@ -47,6 +49,7 @@ class AppFactory:
         registry.register_control(FileAssociationControl, FileAssociationRenderer)
         registry.register_control(NetworkTrafficControl, NetworkTrafficRenderer)
         registry.register_control(WinXMenuControl, WinXMenuRenderer)
+        registry.register_control(WindowsHotkeyControl, WindowsHotkeyRenderer)
         # registry.register_control(CustomSecurityControl, CustomRenderer)  # Keep as example, not in menu
 
         return registry
