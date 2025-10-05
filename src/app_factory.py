@@ -47,7 +47,7 @@ class AppFactory:
         registry.register_control(FileAssociationControl, FileAssociationRenderer)
         registry.register_control(NetworkTrafficControl, NetworkTrafficRenderer)
         registry.register_control(WinXMenuControl, WinXMenuRenderer)
-        registry.register_control(CustomSecurityControl, CustomRenderer)
+        # registry.register_control(CustomSecurityControl, CustomRenderer)  # Keep as example, not in menu
 
         return registry
 
