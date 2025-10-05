@@ -38,13 +38,14 @@ class RegistryGenerator(BaseArtifactGenerator):
         # Add file association registry entries if present in settings
         if "file_associations" in settings:
             reg_lines.append("; File Association Changes")
+            reg_lines.append("; Using HKLM\\SOFTWARE\\Classes instead of HKCR to avoid dynamic generation issues")
             for ext, app in settings["file_associations"].items():
                 reg_lines.extend(
                     [
-                        f"[HKEY_CLASSES_ROOT\\{ext}]",
+                        f"[HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\{ext}]",
                         f'@="{app}File"',
                         "",
-                        f"[HKEY_CLASSES_ROOT\\{app}File\\shell\\open\\command]",
+                        f"[HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\{app}File\\shell\\open\\command]",
                         f'@="{app} \\"%1\\""',
                         "",
                     ]

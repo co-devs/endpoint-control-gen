@@ -31,7 +31,7 @@ class FileAssociationControl(BaseSecurityControl):
 
     def __init__(self):
         metadata = SecurityControlMetadata(
-            name="File Association Security",
+            name="Default App Associations",
             description="Prevent execution of malicious files by changing default applications for commonly abused extensions",
             risk_level=RiskLevel.LOW,
             purpose="Prevent execution of malicious files by changing default applications for commonly abused extensions",

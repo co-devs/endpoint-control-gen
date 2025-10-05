@@ -72,7 +72,7 @@ class PowerShellGenerator(BaseArtifactGenerator):
         self, file_associations: Dict[str, str]
     ) -> list:
         """
-        Generate PowerShell commands for modifying file associations.
+        Generate PowerShell commands for modifying file associations via registry.
 
         Args:
             file_associations (Dict[str, str]): Mapping of file extensions to associated applications.
@@ -82,19 +82,34 @@ class PowerShellGenerator(BaseArtifactGenerator):
         """
         lines = [
             "# File Association Security Control",
-            "Write-Host 'Modifying file associations...' -ForegroundColor Yellow",
+            "Write-Host 'Modifying file associations via registry...' -ForegroundColor Yellow",
             "",
         ]
 
+        # Get unique applications to avoid setting ftype multiple times
+        unique_apps = set(file_associations.values())
+
+        # Set up file types (ftype equivalents) for each unique application
+        lines.append("# Set up file type handlers")
+        for app in unique_apps:
+            lines.extend(
+                [
+                    f"New-Item -Path 'HKLM:\\SOFTWARE\\Classes\\{app}File\\shell\\open\\command' -Force | Out-Null",
+                    f"Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Classes\\{app}File\\shell\\open\\command' -Name '(Default)' -Value '\"{app}\" \"%1\"'",
+                ]
+            )
+        lines.append("")
+
+        # Associate extensions with their file types
+        lines.append("# Associate extensions with handlers")
         for ext, app in file_associations.items():
             lines.extend(
                 [
-                    f"# Set {ext} to open with {app}",
-                    f"cmd /c 'assoc {ext}={app}File'",
-                    f'cmd /c \'ftype {app}File="{app}" "%1"\'',
-                    "",
+                    f"New-Item -Path 'HKLM:\\SOFTWARE\\Classes\\{ext}' -Force | Out-Null",
+                    f"Set-ItemProperty -Path 'HKLM:\\SOFTWARE\\Classes\\{ext}' -Name '(Default)' -Value '{app}File'",
                 ]
             )
+        lines.append("")
 
         return lines
 
