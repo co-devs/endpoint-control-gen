@@ -30,22 +30,49 @@ class ModularSecurityControlsApplication:
         )
         self.ui_service = AppFactory.create_ui_service(self.control_registry)
 
+    def create_page_function(self, control_type: str):
+        """
+        Create a page function for a given control type.
+
+        Args:
+            control_type (str): The name of the control type.
+
+        Returns:
+            callable: A function that renders the page for this control.
+        """
+        def page_function():
+            self.ui_service.setup_custom_css()
+            self.ui_service.render_main_header()
+            self.ui_service.render_sidebar_notices()
+            self._handle_standard_control(control_type)
+        return page_function
+
     def run(self):
         """
-        Run the main application UI and logic.
+        Run the main application UI and logic with st.navigation.
         """
         self.ui_service.setup_page_config()
-        self.ui_service.setup_custom_css()
-        self.ui_service.render_main_header()
 
-        # Render sidebar and get selected control type
-        control_type = self.ui_service.render_sidebar()
+        # Get available controls from registry
+        available_controls = self.control_registry.get_available_controls()
 
-        # Route to appropriate handler based on control type
-        if control_type == "Custom Control":
-            self._handle_custom_control()
-        else:
-            self._handle_standard_control(control_type)
+        # Create page objects for navigation with unique URLs
+        pages = []
+        for control_name in available_controls.keys():
+            # Create a URL-safe identifier from the control name
+            url_path = control_name.lower().replace(" ", "_")
+            pages.append(
+                st.Page(
+                    self.create_page_function(control_name),
+                    title=control_name,
+                    icon="🛡️",
+                    url_path=url_path
+                )
+            )
+
+        # Create and run navigation
+        pg = st.navigation(pages)
+        pg.run()
 
     def _handle_standard_control(self, control_type: str):
         """

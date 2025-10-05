@@ -67,34 +67,19 @@ class UIService:
             "Generate GPO policies, PowerShell scripts, and other artifacts for Windows security hardening."
         )
 
-    def render_sidebar(self) -> str:
+    def render_sidebar_notices(self):
         """
-        Render the sidebar UI, including control selection and notices.
-
-        Returns:
-            str: The selected control type.
+        Render sidebar notices and documentation info (used with st.navigation).
         """
-        st.sidebar.title("🛡️ Security Controls")
-        st.sidebar.markdown("Generate Windows security artifacts")
-
-        # Get available control types from the registry
-        available_controls = list(self.control_registry.get_available_controls().keys())
-
-        # Dropdown for selecting control type
-        control_type = st.sidebar.selectbox("Select Control Type", available_controls)
-
-        # Security notice and documentation info
-        st.sidebar.markdown("---")
         st.sidebar.markdown("**⚠️ Security Notice**")
         st.sidebar.markdown(
             "Always test configurations in a non-production environment first!"
         )
-        st.sidebar.markdown("**📝 Documentation**")
-        st.sidebar.markdown(
-            "Each download includes implementation instructions and security considerations."
-        )
-
-        return control_type
+        st.sidebar.markdown("")
+        # st.sidebar.markdown("**📝 Documentation**")
+        # st.sidebar.markdown(
+        #     "Each download includes implementation instructions and security considerations."
+        # )
 
     def render_control_info(self, control: ISecurityControl):
         """
