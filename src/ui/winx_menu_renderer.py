@@ -52,22 +52,31 @@ class WinXMenuRenderer(BaseUIRenderer):
         st.markdown("**Select WinX menu items to remove:**")
         selected_items = []
 
-        # Split WinX items into two columns for better UI
-        col1, col2 = st.columns(2)
-
-        # Distribute items evenly between columns
+        # Dynamically create up to 3 columns based on number of items
         winx_list = list(winx_items.keys())
-        mid_point = len(winx_list) // 2
+        num_items = len(winx_list)
 
-        with col1:
-            for item in winx_list[:mid_point]:
-                # Checkbox for each item in the first column
-                if st.checkbox(f"Remove {item}", key=f"winx_{item}"):
-                    selected_items.append(winx_items[item])
+        # Determine number of columns (1-3 based on item count)
+        if num_items <= 5:
+            num_cols = 1
+        elif num_items <= 12:
+            num_cols = 2
+        else:
+            num_cols = 3
 
-        with col2:
-            for item in winx_list[mid_point:]:
-                # Checkbox for each item in the second column
+        # Calculate items per column
+        items_per_col = (num_items + num_cols - 1) // num_cols
+
+        # Create columns
+        cols = st.columns(num_cols)
+
+        # Distribute items across columns
+        for i, item in enumerate(winx_list):
+            col_idx = i // items_per_col
+            if col_idx >= num_cols:  # Safety check
+                col_idx = num_cols - 1
+
+            with cols[col_idx]:
                 if st.checkbox(f"Remove {item}", key=f"winx_{item}"):
                     selected_items.append(winx_items[item])
 

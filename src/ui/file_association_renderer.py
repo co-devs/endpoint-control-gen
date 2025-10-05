@@ -53,20 +53,31 @@ class FileAssociationRenderer(BaseUIRenderer):
         st.markdown("**Select extensions to secure:**")
         selected_extensions_list = []
 
-        # Split extensions into two columns for better UI
-        col1, col2 = st.columns(2)
+        # Dynamically create up to 3 columns based on number of items
         extensions_list = list(dangerous_extensions.keys())
-        mid_point = len(extensions_list) // 2
+        num_items = len(extensions_list)
 
-        with col1:
-            for ext in extensions_list[:mid_point]:
-                # Checkbox for each extension in the first column
-                if st.checkbox(f"{ext} - {dangerous_extensions[ext]}", key=ext):
-                    selected_extensions_list.append(ext)
+        # Determine number of columns (1-3 based on item count)
+        if num_items <= 5:
+            num_cols = 1
+        elif num_items <= 12:
+            num_cols = 2
+        else:
+            num_cols = 3
 
-        with col2:
-            for ext in extensions_list[mid_point:]:
-                # Checkbox for each extension in the second column
+        # Calculate items per column
+        items_per_col = (num_items + num_cols - 1) // num_cols
+
+        # Create columns
+        cols = st.columns(num_cols)
+
+        # Distribute items across columns
+        for i, ext in enumerate(extensions_list):
+            col_idx = i // items_per_col
+            if col_idx >= num_cols:  # Safety check
+                col_idx = num_cols - 1
+
+            with cols[col_idx]:
                 if st.checkbox(f"{ext} - {dangerous_extensions[ext]}", key=ext):
                     selected_extensions_list.append(ext)
 

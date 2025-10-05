@@ -56,25 +56,31 @@ class NetworkTrafficRenderer(BaseUIRenderer):
         st.markdown("**Select binaries to block network access:**")
         selected_rules = []
 
-        # Split binaries into two columns for better UI
-        col1, col2 = st.columns(2)
+        # Dynamically create up to 3 columns based on number of items
         binary_list = list(risky_binaries.keys())
-        mid_point = (len(binary_list) + 1) // 2  # Split evenly, first column gets extra if odd
+        num_items = len(binary_list)
 
-        with col1:
-            for binary in binary_list[:mid_point]:
-                # Checkbox for each binary in the first column
-                if st.checkbox(f"Block {binary}", key=f"fw_{binary}", help=risky_binaries[binary]):
-                    # Add all rules for this binary from the default config
-                    binary_base = binary.replace('.exe', '')
-                    for rule in all_rules:
-                        # Match based on the binary name without extension
-                        if rule["name"].startswith(f"Block_{binary_base}_"):
-                            selected_rules.append(rule)
+        # Determine number of columns (1-3 based on item count)
+        if num_items <= 5:
+            num_cols = 1
+        elif num_items <= 12:
+            num_cols = 2
+        else:
+            num_cols = 3
 
-        with col2:
-            for binary in binary_list[mid_point:]:
-                # Checkbox for each binary in the second column
+        # Calculate items per column
+        items_per_col = (num_items + num_cols - 1) // num_cols
+
+        # Create columns
+        cols = st.columns(num_cols)
+
+        # Distribute items across columns
+        for i, binary in enumerate(binary_list):
+            col_idx = i // items_per_col
+            if col_idx >= num_cols:  # Safety check
+                col_idx = num_cols - 1
+
+            with cols[col_idx]:
                 if st.checkbox(f"Block {binary}", key=f"fw_{binary}", help=risky_binaries[binary]):
                     # Add all rules for this binary from the default config
                     binary_base = binary.replace('.exe', '')

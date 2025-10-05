@@ -64,23 +64,31 @@ class WindowsHotkeyRenderer(BaseUIRenderer):
 
         selected_hotkeys = []
 
-        # Split hotkeys into two columns for better UI
-        col1, col2 = st.columns(2)
+        # Dynamically create up to 3 columns based on number of items
         hotkey_list = list(common_hotkeys.keys())
-        mid_point = (len(hotkey_list) + 1) // 2
+        num_items = len(hotkey_list)
 
-        with col1:
-            for hotkey in hotkey_list[:mid_point]:
-                if st.checkbox(
-                    f"Win+{hotkey}",
-                    key=f"hotkey_{hotkey}",
-                    help=common_hotkeys[hotkey],
-                    disabled=disable_all,
-                ):
-                    selected_hotkeys.append(hotkey)
+        # Determine number of columns (1-3 based on item count)
+        if num_items <= 5:
+            num_cols = 1
+        elif num_items <= 12:
+            num_cols = 2
+        else:
+            num_cols = 3
 
-        with col2:
-            for hotkey in hotkey_list[mid_point:]:
+        # Calculate items per column
+        items_per_col = (num_items + num_cols - 1) // num_cols
+
+        # Create columns
+        cols = st.columns(num_cols)
+
+        # Distribute items across columns
+        for i, hotkey in enumerate(hotkey_list):
+            col_idx = i // items_per_col
+            if col_idx >= num_cols:  # Safety check
+                col_idx = num_cols - 1
+
+            with cols[col_idx]:
                 if st.checkbox(
                     f"Win+{hotkey}",
                     key=f"hotkey_{hotkey}",
