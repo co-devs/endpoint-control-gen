@@ -140,7 +140,7 @@ class PowerShellGenerator(BaseArtifactGenerator):
 
     def _generate_winx_script(self, winx_removal: list) -> list:
         """
-        Generate PowerShell commands for modifying the WinX menu.
+        Generate PowerShell commands for modifying the WinX menu for all users and default profile.
 
         Args:
             winx_removal (list): List of WinX menu item names to remove.
@@ -149,22 +149,47 @@ class PowerShellGenerator(BaseArtifactGenerator):
             list: List of PowerShell command strings.
         """
         lines = [
-            "# WinX Menu Modification",
-            "Write-Host 'Modifying WinX menu...' -ForegroundColor Yellow",
-            '$winxPath = "$env:LOCALAPPDATA\\Microsoft\\Windows\\WinX"',
-            "if (Test-Path $winxPath) {",
+            "# WinX Menu Modification - Apply to all users and default profile",
+            "Write-Host 'Modifying WinX menu for all users...' -ForegroundColor Yellow",
+            "",
+            "# Get all user profile paths",
+            '$userProfiles = Get-ChildItem "C:\\Users" -Directory | Where-Object { $_.Name -notin @("Public", "Default", "All Users", "Default User") }',
+            "",
+            "# Modify WinX for each existing user",
+            "foreach ($userProfile in $userProfiles) {",
+            '    $winxPath = Join-Path $userProfile.FullName "AppData\\Local\\Microsoft\\Windows\\WinX"',
+            "    if (Test-Path $winxPath) {",
+            '        Write-Host "  Processing: $($userProfile.Name)" -ForegroundColor Cyan',
         ]
 
         for item in winx_removal:
             lines.append(
-                f'    Remove-Item -Path "$winxPath\\*{item}*" -Force -ErrorAction SilentlyContinue'
+                f'        Remove-Item -Path "$winxPath\\*{item}*" -Recurse -Force -ErrorAction SilentlyContinue'
+            )
+
+        lines.extend(
+            [
+                "    }",
+                "}",
+                "",
+                "# Modify default user profile for new users",
+                '$defaultWinxPath = "C:\\Users\\Default\\AppData\\Local\\Microsoft\\Windows\\WinX"',
+                "if (Test-Path $defaultWinxPath) {",
+                '    Write-Host "  Processing: Default User Profile" -ForegroundColor Cyan',
+            ]
+        )
+
+        for item in winx_removal:
+            lines.append(
+                f'    Remove-Item -Path "$defaultWinxPath\\*{item}*" -Recurse -Force -ErrorAction SilentlyContinue'
             )
 
         lines.extend(
             [
                 "}",
+                "",
                 "# Restart Explorer to apply changes",
-                "Stop-Process -ProcessName explorer -Force",
+                "Stop-Process -ProcessName explorer -Force -ErrorAction SilentlyContinue",
                 "Start-Process explorer",
                 "",
             ]

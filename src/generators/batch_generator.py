@@ -66,6 +66,52 @@ class BatchGenerator(BaseArtifactGenerator):
                 )
             batch_lines.append("")
 
+        # Add WinX menu modification commands if present in settings
+        if "winx_removal" in settings:
+            batch_lines.extend(
+                [
+                    "REM WinX Menu Modification - Apply to all users and default profile",
+                    "echo Modifying WinX menu for all users...",
+                    "",
+                    "REM Process each user profile",
+                    'for /D %%U in (C:\\Users\\*) do (',
+                    '    if exist "%%U\\AppData\\Local\\Microsoft\\Windows\\WinX" (',
+                    '        echo Processing: %%~nxU',
+                ]
+            )
+
+            for item in settings["winx_removal"]:
+                batch_lines.append(
+                    f'        del /F /S /Q "%%U\\AppData\\Local\\Microsoft\\Windows\\WinX\\*{item}*" 2>nul'
+                )
+
+            batch_lines.extend(
+                [
+                    "    )",
+                    ")",
+                    "",
+                    "REM Modify default user profile for new users",
+                    'if exist "C:\\Users\\Default\\AppData\\Local\\Microsoft\\Windows\\WinX" (',
+                    '    echo Processing: Default User Profile',
+                ]
+            )
+
+            for item in settings["winx_removal"]:
+                batch_lines.append(
+                    f'    del /F /S /Q "C:\\Users\\Default\\AppData\\Local\\Microsoft\\Windows\\WinX\\*{item}*" 2>nul'
+                )
+
+            batch_lines.extend(
+                [
+                    ")",
+                    "",
+                    "REM Restart Explorer to apply changes",
+                    "taskkill /F /IM explorer.exe >nul 2>&1",
+                    "start explorer.exe",
+                    "",
+                ]
+            )
+
         batch_lines.extend(
             [
                 "echo Security control implementation completed!",
